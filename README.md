@@ -1,3 +1,11 @@
+# Dev Info
+
+- To test run:
+
+```sh
+cp main.js manifest.json styles.css your-vault/.obsidian/plugins/ledger-extended/
+```
+
 # Ledger for Obsidian
 
 Personal finance tracking and planning, from the comfort of Obsidian! All of
