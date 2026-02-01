@@ -1365,4 +1365,96 @@ describe('fillMissingAmount()', () => {
       ]);
     });
   });
+  describe('Brazilian Real currency support', () => {
+    test('BRL currency code with space before amount', () => {
+      const contents = `2021/04/20 Nubank Transfer
+    b:Nubank    BRL 1473.29
+    c:Nubank    BRL -1790.09`;
+      const txCache = parse(contents, settings);
+      expect(txCache.parsingErrors).toEqual([]);
+      expect(txCache.transactions).toHaveLength(1);
+      expect(txCache.transactions[0]?.value.expenselines[0]).toMatchObject({
+        account: 'b:Nubank',
+        amount: 1473.29,
+        currency: 'BRL',
+      });
+      expect(txCache.transactions[0]?.value.expenselines[1]).toMatchObject({
+        account: 'c:Nubank',
+        amount: -1790.09,
+        currency: 'BRL',
+      });
+    });
+
+    test('R$ currency symbol with space before amount', () => {
+      const contents = `2021/04/20 Nubank Transfer
+    b:Nubank    R$ 1473.29
+    c:Nubank    R$ -1790.09`;
+      const txCache = parse(contents, settings);
+      expect(txCache.parsingErrors).toEqual([]);
+      expect(txCache.transactions).toHaveLength(1);
+      expect(txCache.transactions[0]?.value.expenselines[0]).toMatchObject({
+        account: 'b:Nubank',
+        amount: 1473.29,
+        currency: 'R$',
+      });
+      expect(txCache.transactions[0]?.value.expenselines[1]).toMatchObject({
+        account: 'c:Nubank',
+        amount: -1790.09,
+        currency: 'R$',
+      });
+    });
+
+    test('R$ currency symbol without space', () => {
+      const contents = `2021/04/20 Nubank Transfer
+    b:Nubank    R$1473.29
+    c:Nubank`;
+      const txCache = parse(contents, settings);
+      expect(txCache.parsingErrors).toEqual([]);
+      expect(txCache.transactions).toHaveLength(1);
+      expect(txCache.transactions[0]?.value.expenselines[0]).toMatchObject({
+        account: 'b:Nubank',
+        amount: 1473.29,
+        currency: 'R$',
+      });
+    });
+
+    test('negative amount with sign before BRL', () => {
+      const contents = `2021/04/20 Nubank Transfer
+    b:Nubank    -BRL 1473.29
+    c:Nubank`;
+      const txCache = parse(contents, settings);
+      expect(txCache.parsingErrors).toEqual([]);
+      expect(txCache.transactions[0]?.value.expenselines[0]).toMatchObject({
+        account: 'b:Nubank',
+        amount: -1473.29,
+        currency: 'BRL',
+      });
+    });
+
+    test('existing $ currency still works', () => {
+      const contents = `2021/04/20 Obsidian
+    e:Spending Money    $20.00
+    b:CreditUnion`;
+      const txCache = parse(contents, settings);
+      expect(txCache.parsingErrors).toEqual([]);
+      expect(txCache.transactions[0]?.value.expenselines[0]).toMatchObject({
+        account: 'e:Spending Money',
+        amount: 20,
+        currency: '$',
+      });
+    });
+
+    test('account names with R letter are not confused with R$', () => {
+      const contents = `2021/04/20 Test
+    e:Research Budget    $20.00
+    b:CreditUnion`;
+      const txCache = parse(contents, settings);
+      expect(txCache.parsingErrors).toEqual([]);
+      expect(txCache.transactions[0]?.value.expenselines[0]).toMatchObject({
+        account: 'e:Research Budget',
+        amount: 20,
+        currency: '$',
+      });
+    });
+  });
 });

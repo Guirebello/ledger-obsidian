@@ -42,11 +42,11 @@
         ws:     /[ \t]+/,
         absoluteNumber: { match: /[0-9.,]+/, value: (s:string) => s.replace(/,/g, '') },
         numberSign: /-/,
-        currency: /[$£₤€₳₿₹¥￥₩Р₱₽₴₫]/, // Note: Р != P
+        currency: /R\$|BRL|[$£₤€₳₿₹¥￥₩Р₱₽₴₫]/, // Note: Р != P, R$ must come before $ to match first
         reconciled: /[!*]/,
         comment: { match: /[;#|][^\n]+/, value: (s:string) => s.slice(1).trim() },
         assertion: {match: /==?\*?/},
-        account: { match: /[^$£₤€₳₿₹¥￥₩Р₱₽₴₫;#|\n\-]+/, value: (s:string) => s.trim() },
+        account: { match: /(?:[^\s$£₤€₳₿₹¥￥₩Р₱₽₴₫;#|\n\-]|[ \t]+(?!R\$|BRL|[$£₤€₳₿₹¥￥₩Р₱₽₴₫\d\-]))+/, value: (s:string) => s.trim() },
       },
       alias: {
         account: { match: /[a-zA-Z0-9: ]+/, value: (s:string) => s.trim() },
@@ -86,9 +86,9 @@ expenselines ->
   | expenselines %newline expenseline             {% ([rest,,l]) => { return [rest,l].flat(1) } %}
 
 expenseline ->
-    %ws:+ reconciled:? %account amount:? balance:? %ws:* %comment:?
+    %ws:+ reconciled:? %account %ws:* amount:? balance:? %ws:* %comment:?
                                                   {%
-                                                    function([,r,acct,amt,_ba,,cmt]) {
+                                                    function([,r,acct,_ws,amt,_ba,,cmt]) {
                                                       return {
                                                         reconcile: r || '',
                                                         account: acct.value,
@@ -103,7 +103,7 @@ expenseline ->
 balance -> %ws:* %assertion %ws:+ amount                      {% (d) => {return {}} %}
 reconciled -> %reconciled %ws:+                   {% ([r,]) => r.value %}
 alias -> "alias" %account %equal %account         {% ([,l,,r]) => { return { blockLine: l.line, left: l.value, right: r.value } } %}
-amount -> %currency %absoluteNumber                       {% ([c,a]) => { return {currency: c.value, amount: parseFloat(a.value)} } %}
-amount -> %currency %numberSign %absoluteNumber                       {% ([c,ns,a]) => { return {currency: c.value, amount: parseFloat(ns.value + a.value)} } %}
-amount -> %numberSign %currency %absoluteNumber                       {% ([ns,c,a]) => { return {currency: c.value, amount: parseFloat(ns.value + a.value)} } %}
+amount -> %currency %ws:* %absoluteNumber                       {% ([c,_ws,a]) => { return {currency: c.value, amount: parseFloat(a.value)} } %}
+amount -> %currency %ws:* %numberSign %absoluteNumber                       {% ([c,_ws,ns,a]) => { return {currency: c.value, amount: parseFloat(ns.value + a.value)} } %}
+amount -> %numberSign %currency %ws:* %absoluteNumber                       {% ([ns,c,_ws,a]) => { return {currency: c.value, amount: parseFloat(ns.value + a.value)} } %}
 check -> %check                                   {% ([c]) => parseFloat(c.value) %}

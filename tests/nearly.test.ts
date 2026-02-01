@@ -334,3 +334,81 @@ describe('parsing a transaction', () => {
     ]);
   });
 });
+
+describe('parsing multi-character currency', () => {
+  test('BRL with space before number', () => {
+    parser.feed('2018-04-03 Brazilian Purchase\n');
+    parser.feed('    Expenses:Food   BRL 300\n');
+    parser.feed('    Assets:Nubank  BRL -300');
+
+    expect(parser.results[0][0].value.expenselines[0]).toMatchObject({
+      amount: 300,
+      currency: 'BRL',
+      account: 'Expenses:Food',
+    });
+    expect(parser.results[0][0].value.expenselines[1]).toMatchObject({
+      amount: -300,
+      currency: 'BRL',
+      account: 'Assets:Nubank',
+    });
+  });
+
+  test('BRL without space before number', () => {
+    parser.feed('2018-04-03 Brazilian Purchase\n');
+    parser.feed('    Expenses:Food   BRL300\n');
+    parser.feed('    Assets:Nubank');
+
+    expect(parser.results[0][0].value.expenselines[0]).toMatchObject({
+      amount: 300,
+      currency: 'BRL',
+      account: 'Expenses:Food',
+    });
+  });
+
+  test('R$ symbol with space before number', () => {
+    parser.feed('2018-04-03 Brazilian Purchase\n');
+    parser.feed('    Expenses:Food   R$ 300\n');
+    parser.feed('    Assets:Nubank');
+
+    expect(parser.results[0][0].value.expenselines[0]).toMatchObject({
+      amount: 300,
+      currency: 'R$',
+      account: 'Expenses:Food',
+    });
+  });
+
+  test('R$ symbol matches before $ alone', () => {
+    parser.feed('2018-04-03 Brazilian Purchase\n');
+    parser.feed('    Expenses:Food   R$300\n');
+    parser.feed('    Assets:Nubank');
+
+    expect(parser.results[0][0].value.expenselines[0]).toMatchObject({
+      amount: 300,
+      currency: 'R$',
+    });
+  });
+
+  test('negative sign before BRL', () => {
+    parser.feed('2018-04-03 Brazilian Purchase\n');
+    parser.feed('    Expenses:Food   -BRL 300\n');
+    parser.feed('    Assets:Nubank');
+
+    expect(parser.results[0][0].value.expenselines[0]).toMatchObject({
+      amount: -300,
+      currency: 'BRL',
+      account: 'Expenses:Food',
+    });
+  });
+
+  test('negative sign after BRL', () => {
+    parser.feed('2018-04-03 Brazilian Purchase\n');
+    parser.feed('    Expenses:Food   BRL -300\n');
+    parser.feed('    Assets:Nubank');
+
+    expect(parser.results[0][0].value.expenselines[0]).toMatchObject({
+      amount: -300,
+      currency: 'BRL',
+      account: 'Expenses:Food',
+    });
+  });
+});
