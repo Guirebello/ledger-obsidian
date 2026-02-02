@@ -3,7 +3,7 @@ import { LedgerModifier } from '../file-interface';
 import type { TransactionCache } from '../parser';
 import { ISettings } from '../settings';
 import { CategoryCard, CategoryType } from './CategoryCard';
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import styled from 'styled-components';
 
 const ALL_CATEGORIES: CategoryType[] = [
@@ -85,18 +85,18 @@ export const CategorySnapshot: React.FC<{
   dailyAccountBalanceMap: Map<string, Map<string, number>>;
   updater: LedgerModifier;
 }> = ({ txCache, settings, dailyAccountBalanceMap, updater }): JSX.Element => {
-  const visibleCategories =
-    settings.visibleSnapshotCategories || ALL_CATEGORIES;
+  const [visibleCategories, setVisibleCategories] = useState<CategoryType[]>(settings.visibleSnapshotCategories as CategoryType[] || ALL_CATEGORIES);
 
   const handleToggle = (category: CategoryType): void => {
     const newVisible = visibleCategories.includes(category)
       ? visibleCategories.filter((c) => c !== category)
       : [...visibleCategories, category];
 
+    setVisibleCategories(newVisible);
     updater.updateSettings({ visibleSnapshotCategories: newVisible });
   };
 
-  const visibleCategorySet = new Set(visibleCategories);
+  const visibleCategorySet = useMemo(() => new Set(visibleCategories), [visibleCategories]);
 
   return (
     <SnapshotContainer>
