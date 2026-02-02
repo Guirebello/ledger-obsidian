@@ -129,6 +129,65 @@ const renderTree = (
  * it would remove "Liabilities" because it only has a single child
  * ("Liabilities:Credit").
  */
+/**
+ * getCurrentBalance returns the most recent balance for an account.
+ */
+export const getCurrentBalance = (
+  account: string,
+  dailyAccountBalanceMap: Map<string, Map<string, number>>,
+  allAccounts: string[],
+): number => {
+  const accounts = [...findChildAccounts(account, allAccounts), account];
+  const dates = [...dailyAccountBalanceMap.keys()].sort();
+  const latestDate = dates[dates.length - 1];
+  if (!latestDate) return 0;
+
+  const accountBalances = dailyAccountBalanceMap.get(latestDate);
+  if (!accountBalances) return 0;
+
+  return accounts.reduce(
+    (sum, acc) => sum + (accountBalances.get(acc) || 0),
+    0,
+  );
+};
+
+export interface AccountWithBalance {
+  name: string;
+  balance: number;
+}
+
+/**
+ * getTopLevelAccountsWithBalances returns an array of top-level accounts
+ * (immediate children of the category) with their balances.
+ */
+export const getTopLevelAccountsWithBalances = (
+  categoryAccounts: string[],
+  dailyAccountBalanceMap: Map<string, Map<string, number>>,
+  allAccounts: string[],
+): AccountWithBalance[] => {
+  // Get unique top-level account names (first segment after category prefix)
+  const topLevelSet = new Set<string>();
+  categoryAccounts.forEach((account) => {
+    const parts = account.split(':');
+    if (parts.length >= 2) {
+      topLevelSet.add(`${parts[0]}:${parts[1]}`);
+    } else {
+      topLevelSet.add(account);
+    }
+  });
+
+  return [...topLevelSet].map((account) => ({
+    name: account,
+    balance: getCurrentBalance(account, dailyAccountBalanceMap, allAccounts),
+  }));
+};
+
+/**
+ * getCategoryTotal sums balances from an array of accounts with balances.
+ */
+export const getCategoryTotal = (accounts: AccountWithBalance[]): number =>
+  accounts.reduce((sum, account) => sum + account.balance, 0);
+
 export const removeDuplicateAccounts = (input: string[]): string[] => {
   const tree: RootNode = { children: [] };
 

@@ -57,6 +57,11 @@ export class LedgerModifier {
     const newFileContents = `${fileContents}\n${newExpense}`;
     await vault.modify(this.ledgerFile, newFileContents);
   }
+
+  public updateSettings(partialSettings: Partial<ISettings>): void {
+    Object.assign(this.plugin.settings, partialSettings);
+    this.plugin.saveData(this.plugin.settings);
+  }
 }
 
 export const getTransactionCache = async (

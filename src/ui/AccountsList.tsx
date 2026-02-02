@@ -35,6 +35,21 @@ const Expander = styled.span`
   width: 15px;
 `;
 
+const ClearButton = styled.button`
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-bottom: 8px;
+  font-size: 0.9em;
+
+  :hover {
+    color: var(--text-normal);
+    text-decoration: underline;
+  }
+`;
+
 const Tree: React.FC<{
   txCache: TransactionCache;
   settings: ISettings;
@@ -136,6 +151,11 @@ export const AccountsList: React.FC<{
 
   return (
     <div className="ledger-account-list">
+      {props.selectedAccounts.length > 0 && (
+        <ClearButton onClick={() => props.setSelectedAccounts([])}>
+          Clear selection
+        </ClearButton>
+      )}
       {data.map((root) => (
         <Tree
           txCache={props.txCache}

@@ -8,6 +8,7 @@ import type { TransactionCache } from '../parser';
 import { ISettings } from '../settings';
 import { AccountsList } from './AccountsList';
 import { AccountVisualization } from './AccountVisualization';
+import { CategorySnapshot } from './CategorySnapshot';
 import { DateRangeSelector } from './DateRangeSelector';
 import { NetWorthVisualization } from './NetWorthVisualization';
 import { ParseErrors } from './ParseErrors';
@@ -152,6 +153,12 @@ const DesktopDashboard: React.FC<{
           ) : null}
           {selectedAccounts.length === 0 ? (
             <>
+              <CategorySnapshot
+                txCache={props.txCache}
+                settings={props.settings}
+                dailyAccountBalanceMap={dailyAccountBalanceMap}
+                updater={props.updater}
+              />
               <NetWorthVisualization
                 dailyAccountBalanceMap={dailyAccountBalanceMap}
                 startDate={startDate}
@@ -245,12 +252,8 @@ const Tutorial: React.FC<{
     },
   ];
 
-  const onExit = (index: number): void => {
-    if (index + 1 === steps.length) {
-      props.setTutorialIndex(-1);
-    } else {
-      props.setTutorialIndex(index);
-    }
+  const onExit = (): void => {
+    props.setTutorialIndex(-1);
   };
 
   return (

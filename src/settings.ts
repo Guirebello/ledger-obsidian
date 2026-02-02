@@ -8,6 +8,8 @@ const defaultSettings: ISettings = {
   expenseAccountsPrefix: 'Expenses',
   incomeAccountsPrefix: 'Income',
   liabilityAccountsPrefix: 'Liabilities',
+
+  visibleSnapshotCategories: ['Assets', 'Liabilities', 'Income', 'Expenses'],
 };
 
 export interface ISettings {
@@ -20,6 +22,8 @@ export interface ISettings {
   expenseAccountsPrefix: string;
   incomeAccountsPrefix: string;
   liabilityAccountsPrefix: string;
+
+  visibleSnapshotCategories: string[];
 }
 
 export const settingsWithDefaults = (
